@@ -45,7 +45,7 @@
     <div class="container">
 
       <div class="hero-unit">
-        <h1>chatroom sample</h1>
+        <h1>room#1</h1>
       </div>
 
 <div class="row">
@@ -92,8 +92,10 @@
  });
 
  socket.on("message", function(message){
- $("<tr>").html("<td width=\"200px\"><p class=\"text-success\">" + socket.socket.transport.sessid + " says : </p></td><td>" + message + "</td>").prependTo($("#messageArea table tbody"));// 受信メッセージをレンダリング
+ $("<div class=\"text-message\" style=\"display: none;\"><tr>").html("<td width=\"200px\"><p class=\"text-success\">" + socket.socket.transport.sessid + " says : </p></td><td><p>" + message + "</p></td>").prependTo($("#messageArea table tbody"));// 受信メッセージをレンダリング
+ $(".text-message").animate({height: 'show', opacity: 'show'}, 'normal');
  });
+
 
  $("#submitButton").click(function(){
  socket.emit("message", {message: $("#msg").val()});// 入力メッセージをサーバへ
