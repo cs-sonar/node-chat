@@ -44,15 +44,19 @@ console.log("Express server listening on port " + app.get('port'));
 var socket = require('socket.io').listen(server);
 socket.set("log level",1);
 
-socket.on('connection', function(client) {
- // クライアントが接続したときの処理
- console.log(client.manager.roomClients);
- client.emit('loginusers',client.manager.roomClients );
- client.broadcast.emit('loginusers', client.manager.roomClients);
 
- client.on('login', function(event){
-   client.emit('system', event.username + ' さんがログインしました');
-   client.broadcast.emit('system', event.username + ' さんがログインしました');
+socket.on('connection', function(client) {
+ // 変数設定
+ var uid = client.store.id;
+ var roomClients = client.manager.roomClients;
+
+ // クライアントが接続したときの処理
+ client.on('login', function(username){
+   roomClients[uid]['username'] = username;
+   client.emit('system', username + ' さんがログインしました');
+   client.broadcast.emit('system', username + ' さんがログインしました');
+   client.emit('loginusers',roomClients );
+   client.broadcast.emit('loginusers', roomClients);
  });
 
   // クライアントがメッセージを送信した時の処理
@@ -64,9 +68,10 @@ socket.on('connection', function(client) {
 
   // クライアントが切断したときの処理
   client.on('disconnect', function(){
-     console.log(client.store.Id + 'が切断しました。');
-     client.broadcast.emit('system', client.store.id + ' さんがログアウトしました');
-     client.broadcast.emit('loginusers', client.manager.roomClients);
+     console.log(roomClients[uid]['username'] + 'が切断しました。');
+     client.broadcast.emit('system', roomClients[uid]['username'] + ' さんがログアウトしました');
+     delete client.manager.roomClients[uid];
+     client.broadcast.emit('loginusers', roomClients);
   });
 });
 
