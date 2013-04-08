@@ -29,12 +29,13 @@ app.configure('development', function(){
 });
 
 app.get('/', routes.index);
+var login = require('./routes/index');
+app.post('/login',login.login);
+app.get('/login', function(req, res){
+        res.redirect('/');
+});
 app.get('/chat', routes.chat);
 app.get('/users', user.list);
-
-//http.createServer(app).listen(app.get('port'), function(){
-//  console.log('Express server listening on port ' + app.get('port'));
-//});
 
 var server = http.createServer(app).listen(app.get('port'), function(){
 console.log("Express server listening on port " + app.get('port'));
@@ -43,15 +44,29 @@ console.log("Express server listening on port " + app.get('port'));
 var socket = require('socket.io').listen(server);
 socket.set("log level",1);
 
-
 socket.on('connection', function(client) {
+ // クライアントが接続したときの処理
+ console.log(client.manager.roomClients);
+ client.emit('loginusers',client.manager.roomClients );
+ client.broadcast.emit('loginusers', client.manager.roomClients);
+
+ client.on('login', function(event){
+   client.emit('system', event.username + ' さんがログインしました');
+   client.broadcast.emit('system', event.username + ' さんがログインしました');
+ });
+
+  // クライアントがメッセージを送信した時の処理
  client.on('message', function(event){
-   // 受け取ったメッセージをコンソールに出力
-   console.log(event.message);
-   // 送信元へメッセージ送信
-   client.emit('message', event.message);
-   // 送信元以外の全てのクライアントへメッセージ送信
-   client.broadcast.emit('message', event.message);
+   console.log(event.username + ' says: ' + event.message);
+   client.emit('message', event);
+   client.broadcast.emit('message', event);
+  });
+
+  // クライアントが切断したときの処理
+  client.on('disconnect', function(){
+     console.log(client.store.Id + 'が切断しました。');
+     client.broadcast.emit('system', client.store.id + ' さんがログアウトしました');
+     client.broadcast.emit('loginusers', client.manager.roomClients);
   });
 });
 
