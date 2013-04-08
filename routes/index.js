@@ -9,7 +9,7 @@ exports.index = function(req, res){
   });
 };
 
-exports.login = function(req, res){
+exports.chat = function(req, res){
         var result = {
 		title: 'ChatRoom',
 		username: req.body.username
@@ -17,9 +17,11 @@ exports.login = function(req, res){
         res.render('chat', result);
 };
 
+/*
 exports.chat = function(req, res){
   res.render('chat', {
 	title: 'Chat Sample'
   });
 };
+ */
 

@@ -62,7 +62,7 @@ $(function(){
     var socket = new io.connect("/");
 
     socket.on("connect", function(){
-        var uid = socket.socket.transport.sessid;
+        uid = socket.socket.transport.sessid;
         $("#transportName").text("connection ID " + socket.socket.transport.sessid); // 接続ID
         $("#transportID").text("connect via " + socket.socket.transport.name); // 接続時に接続方式表示
         $("#username").text("connect username " + username);
@@ -70,10 +70,14 @@ $(function(){
     });
 
     socket.on("loginusers", function(login){
+        console.log(uid);
         $("#loginusers li").remove();
 	for (var i in login){
-		console.log(login[i].username);
+		if (i === uid) {
+		$("<li class=\"blue\">").text(login[i].username).prependTo($("#loginusers"));
+		}else{
 		$("<li>").text(login[i].username).prependTo($("#loginusers"));
+		}
 	}
     });
 
@@ -92,7 +96,6 @@ $(function(){
     });
 });
     </script>
-
   </body>
 </html>
 
