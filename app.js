@@ -10,9 +10,14 @@ var express = require('express')
   , http = require('http')
   , path = require('path');
 
+var store = new express.session.MemoryStore();
+var cookieUtil = require('cookie');
+var connect = require('connect');
+
 var app = express();
 
 app.configure(function(){
+  app.set('secretKey', 'your secret here');
   app.set('port', process.env.PORT || 3000);
   app.set('views', __dirname + '/views');
   app.set('view engine', 'ejs');
@@ -20,6 +25,11 @@ app.configure(function(){
   app.use(express.logger('dev'));
   app.use(express.bodyParser());
   app.use(express.methodOverride());
+  app.use(express.cookieParser(app.get('secretKey')));
+  app.use(express.session({
+    store : store
+    , cookie : { httpOnly : false }
+  }));
   app.use(app.router);
   app.use(express.static(path.join(__dirname, 'public')));
 });
@@ -54,12 +64,21 @@ socket.on('connection', function(client) {
 	var uid = client.store.id;
 	var roomClients = client.manager.roomClients;
 	// クライアントが接続したときの処理
-	client.on('login', function(username){
-		roomClients[uid]['username'] = username;
-		client.emit('system', username + ' さんがログインしました');
-		client.broadcast.emit('system', username + ' さんがログインしました');
-		client.emit('loginusers',roomClients );
-		client.broadcast.emit('loginusers', roomClients);
+	client.on('login', function(cookie){
+		cookie = cookieUtil.parse(cookie); // クッキーをオブジェクトにパース
+		sid = connect.utils.parseSignedCookie(cookie['connect.sid'], app.get('secretKey')); // 署名されたセッションIDをデコード
+
+		store.get(sid, function(err, session){
+			if(session && "username" in session){
+				username = session.username // httpセッションからユーザ名を取得
+				client.emit('username', username);
+				roomClients[uid]['username'] = username;
+				client.emit('system', username + ' さんがログインしました');
+				client.broadcast.emit('system', username + ' さんがログインしました');
+				client.emit('loginusers',roomClients );
+				client.broadcast.emit('loginusers', roomClients);
+			}
+		});
 	});
 	// クライアントがメッセージを送信した時の処理
 	client.on('message', function(event){
