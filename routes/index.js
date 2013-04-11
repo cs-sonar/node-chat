@@ -10,11 +10,11 @@ exports.index = function(req, res){
 };
 
 exports.chat = function(req, res){
-        var result = {
+	var result = {
 		title: 'ChatRoom',
-		username: req.body.username
 	};
-        res.render('chat', result);
+	req.session.username = req.body.username; // httpセッションにユーザ名を格納
+	res.render('chat', result);
 };
 
 /*
