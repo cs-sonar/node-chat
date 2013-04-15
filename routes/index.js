@@ -17,11 +17,4 @@ exports.chat = function(req, res){
 	res.render('chat', result);
 };
 
-/*
-exports.chat = function(req, res){
-  res.render('chat', {
-	title: 'Chat Sample'
-  });
-};
- */
 

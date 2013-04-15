@@ -72,6 +72,20 @@ $(function(){
 	}
      });
 
+    // 画像アップロード
+    $("#fileInput").change(function(event){ //アップロードボタンに変更があれば
+        var file = event.target.files[0];
+        var fileReader = new FileReader();
+        var send_file = file;
+        var data = {};
+        fileReader.readAsBinaryString(send_file);
+        fileReader.onload = function(event) {
+            data.file = event.target.result;
+            data.name = "uploadFile";
+            socket.emit('upload',data);
+        }
+    });
+
     //DBにあるメッセージを削除した場合は表示を削除
     socket.on('db drop', function(){
         $('#messageLogArea dl').empty();

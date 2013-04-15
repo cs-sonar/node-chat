@@ -4,7 +4,7 @@
  */
 
 var express = require('express')
-  , os = require('os')
+  , fs = require('fs')
   , routes = require('./routes')
   , user = require('./routes/user')
   , http = require('http')
@@ -43,8 +43,9 @@ app.configure('development', function(){
 /**
  * routing
  */
-app.get('/', routes.index);
 app.get('/users', user.list);
+app.get('/', routes.index);
+//app.get('/images', routes.images);
 app.post('/chat',routes.chat);
 app.get('/chat', function(req, res){
 	res.redirect('/');
@@ -58,8 +59,8 @@ var Schema = mongoose.Schema;
 var UserSchema = new Schema({
   username: String,
   message: String,
-//  date: Date
-  date: String
+  date: String,
+  image: Buffer
 });
 mongoose.model('User', UserSchema);
 mongoose.connect('mongodb://localhost/chat_app');
@@ -87,8 +88,8 @@ socket.on('connection', function(client) {
 		// 初回接続でDBに保存されているメッセージを取得
 		User.find(function(err, docs){
 			client.emit('msgopen', docs);
+			//console.log(docs);
 		});
-
 		store.get(sid, function(err, session){
 			if(session && "username" in session){
 				username = session.username // httpセッションからユーザ名を取得
@@ -102,7 +103,7 @@ socket.on('connection', function(client) {
 					date	:	nowdate,
 					username:	username
 				}
-				client.emit('system', Obj); // TODO: Bug. ログインメッセージが出ない
+				client.emit('system', Obj);
 				client.broadcast.emit('system', Obj);
 				client.emit('loginusers',roomClients );
 				client.broadcast.emit('loginusers', roomClients);
@@ -136,6 +137,28 @@ socket.on('connection', function(client) {
 			if (err) { console.log(err); }
 		});
 	});
+
+
+	// クライアントが画像を送信した時の処理
+	client.on('upload', function(data){
+		var nowdate = getDateAndTime();
+		Obj = {
+			date	:	nowdate,
+			username:	'test',
+			image	:	data.file
+		}
+		client.emit('message', Obj);
+		client.broadcast.emit('message', Obj);
+		//DBに登録
+		var user = new User();
+		user.username  = Obj.username;
+		user.date = Obj.date;
+		user.image = Obj.image;
+		user.save(function(err) {
+			if (err) { console.log(err); }
+		});
+	});
+
 	// クライアントがログオール削除を実行した時
 	client.on('msg alldel', function(){
 		client.emit('db drop');
