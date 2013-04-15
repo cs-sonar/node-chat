@@ -69,8 +69,22 @@ $(function(){
 		alert("ぬるぽ");
 	}else{
         	socket.emit("message", {message: $("#msg").val(),username: username});
+		$("#msg").val("");
 	}
      });
+
+    // エンターキーが押された場合も入力メッセージをサーバーへ
+    $("body").keypress( function( event ) {
+	if( event.which === 13 ){
+		if($("#msg").val() == ""){
+			return;
+		}else{
+       		 	socket.emit("message", {message: $("#msg").val(),username: username});
+			$("#msg").val("");
+		}
+	}
+    });
+
 
     // 画像アップロード
     $("#fileInput").change(function(event){ //アップロードボタンに変更があれば
