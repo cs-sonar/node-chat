@@ -19,17 +19,20 @@ a {
 }
 
 dl.list {
+	margin: 0 0 15px;
+	padding: 0 10px 10px;
 }
-
 dl.list dt {
-   float:left;
-   width:10em;
-   border-bottom:1px solid #999;
-   padding:20px;
+	float: left;
+	width: 12em;
+	padding: 20px 0;
+	font-weight: bold;
+	text-indent: 1em;
+	line-height: 150%;
+}
+dl.list dd {
+	padding: 20px 0 20px 7em;
+	line-height: 150%;
+	border-bottom: 1px #CCCCCC solid;
 }
 
-dl.list dd {
-   margin-left:10em;
-   padding:20px;
-   border-bottom:1px solid #999;
-}
