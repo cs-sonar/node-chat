@@ -54,7 +54,6 @@ app.get('/chat', function(req, res){
 /**
  * mongodbサーバーへ接続
  */
-//mongoose
 var Schema = mongoose.Schema;
 var UserSchema = new Schema({
   username: String,
@@ -96,15 +95,22 @@ socket.on('connection', function(client) {
 				client.emit('username', username);
 				roomClients[uid]['username'] = username;
 				var msg = username + ' さんがログインしました';
-				client.emit('system', msg); // TODO: Bug. ログインメッセージが出ない
-				client.broadcast.emit('system', msg);
+				var nowdate = getDateAndTime();
+				var username = 'system';
+				Obj = {
+					message	:	msg,
+					date	:	nowdate,
+					username:	username
+				}
+				client.emit('system', Obj); // TODO: Bug. ログインメッセージが出ない
+				client.broadcast.emit('system', Obj);
 				client.emit('loginusers',roomClients );
 				client.broadcast.emit('loginusers', roomClients);
 				//DBに登録
 				var user = new User();
-				user.username  = 'system';
-				user.message  = msg;
-				user.date = new Date();
+				user.username  = Obj.username;
+				user.message  = Obj.message;
+				user.date = Obj.date;
 				user.save(function(err) {
 					if (err) { console.log(err); }
 				});
@@ -113,15 +119,19 @@ socket.on('connection', function(client) {
 	});
 	// クライアントがメッセージを送信した時の処理
 	client.on('message', function(event){
-		nowdate = new getDateAndTime();
-		console.log(event.username + ' says: ' + event.message);
-		client.emit('message', event);
-		client.broadcast.emit('message', event);
+		var nowdate = getDateAndTime();
+		Obj = {
+			message	:	event.message,
+			date	:	nowdate,
+			username:	event.username
+		}
+		client.emit('message', Obj);
+		client.broadcast.emit('message', Obj);
 		//DBに登録
 		var user = new User();
-		user.username  = event.username;
-		user.message  = event.message;
-		user.date = nowdate;
+		user.username  = Obj.username;
+		user.message  = Obj.message;
+		user.date = Obj.date;
 		user.save(function(err) {
 			if (err) { console.log(err); }
 		});
@@ -134,15 +144,19 @@ socket.on('connection', function(client) {
 	});
 	// クライアントが切断したときの処理
 	client.on('disconnect', function(){
-		nowdate = new getDateAndTime();
-		console.log(roomClients[uid]['username'] + 'が切断しました。');
+		var nowdate = getDateAndTime();
 		var msg = roomClients[uid]['username'] + ' さんがログアウトしました';
-		client.broadcast.emit('system', msg );
+		Obj = {
+			message	:	msg,
+			date	:	nowdate,
+			username:	roomClients[uid]['username']
+		}
+		client.broadcast.emit('system', Obj );
 		//DBに登録
 		var user = new User();
-		user.username  = roomClients[uid]['username'];
-		user.message  = msg;
-		user.date = nowdate;
+		user.username  = Obj.username;
+		user.message  = Obj.message;
+		user.date = Obj.date;
 		user.save(function(err) {
 			if (err) { console.log(err); }
 		});

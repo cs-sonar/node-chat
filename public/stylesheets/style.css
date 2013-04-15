@@ -13,3 +13,23 @@ a {
   font: boid;
 }
 
+.gray {
+  color: #999;
+  font: boid;
+}
+
+dl.list {
+}
+
+dl.list dt {
+   float:left;
+   width:10em;
+   border-bottom:1px solid #999;
+   padding:20px;
+}
+
+dl.list dd {
+   margin-left:10em;
+   padding:20px;
+   border-bottom:1px solid #999;
+}

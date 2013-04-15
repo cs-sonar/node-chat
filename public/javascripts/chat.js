@@ -9,20 +9,39 @@ $(function(){
         socket.emit("login", document.cookie);
     });
 
+    // POSTしたユーザ名をhttpセッション+socket.io経由で取得
     socket.on("username", function(sessionUsername){
-	// POSTしたユーザ名をhttpセッション+socket.io経由で取得
         username = sessionUsername;
         $("#username").text("connect username " + username);
     });
+
+    // 初回接続でDBにあるデータを取得
+    socket.on('msgopen', function(msg){
+        if(msg.length == 0){ // 取得内容が空っぽだったら
+		return;
+        } else {
+            $('#messageLogArea dl').empty();
+            $.each(msg, function(key, value){
+                $('div#messageLogArea dl')
+		.prepend(
+			$('<dt class="gray">' + value.username + ' says :</dt><dd class="gray">' + value.message + '(' + value.date + ')</dd>')
+		);
+            });
+        }
+     });
 
     // ログイン中のユーザーを描写
     socket.on("loginusers", function(login){
         $("#loginusers li").remove();
 	for (var i in login){
 		if (i === uid) {
-			$("<li class=\"blue\">").text(login[i].username).prependTo($("#loginusers"));
+			$("<li class=\"blue\">")
+			.html('<i class="icon-user"></i>' + login[i].username)
+			.prependTo($("#loginusers"));
 		}else{
-			$("<li>").text(login[i].username).prependTo($("#loginusers"));
+			$("<li>")
+			.html( '<i class="icon-user"></i>' + login[i].username)
+			.prependTo($("#loginusers"));
 		}
 	}
     });
@@ -30,7 +49,7 @@ $(function(){
     socket.on("message", function(message){
         $('div#messageArea dl')
 	.prepend(
-		$('<dt>' + message.username  + ' says : </dt><dd>' + message.message + '</dd>')
+		$('<dt class="blue">' + message.username  + ' says : </dt><dd>' + message.message + '　<sapn class="gray">(' + message.date + ')</span></dd>')
 		.fadeIn('slow')
 	);
     });
@@ -39,38 +58,27 @@ $(function(){
     socket.on("system", function(message){
         $('div#messageArea dl')
 	.prepend(
-		$('<dt>system says : </dt><dd>' + message + '</dd>')
+		$('<dt class="red">' + message.username + ' says : </dt><dd><i class="icon-bullhorn"></i>　' + message.message + '　<sapn class="gray">(' + message.date + ')</span></dd>')
 		.fadeIn('slow')
 	);
     });
 
     // 入力メッセージをサーバへ
     $("#submitButton").click(function(){
-        socket.emit("message", {message: $("#msg").val(),username: username});
+	if($("#msg").val() == ""){
+		alert("ぬるぽ");
+	}else{
+        	socket.emit("message", {message: $("#msg").val(),username: username});
+	}
      });
 
     //DBにあるメッセージを削除した場合は表示を削除
     socket.on('db drop', function(){
-        $('#messageArea dl').empty();
+        $('#messageLogArea dl').empty();
     });
 
     // ログ削除ボタン
     $("#logDelButton").click(function(){
         socket.emit("msg alldel",'DB data all delete.');
-     });
-
-    // 初回接続でDBにあるデータを取得
-    socket.on('msgopen', function(msg){
-        if(msg.length == 0){ // 取得内容が空っぽだったら
-		return;
-        } else {
-            $('#messageArea dl').empty();
-            $.each(msg, function(key, value){
-                $('div#messageArea dl')
-		.prepend(
-			$('<dt>' + value.username + ' says :</dt><dd>' + value.message + '</dd>')
-		);
-            });   
-        }
      });
 });
