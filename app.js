@@ -8,7 +8,8 @@ var express = require('express')
   , routes = require('./routes')
   , user = require('./routes/user')
   , http = require('http')
-  , path = require('path');
+  , path = require('path')
+  , mongoose = require('mongoose');
 
 var store = new express.session.MemoryStore();
 var cookieUtil = require('cookie');
@@ -39,7 +40,6 @@ app.configure('development', function(){
 });
 
 
-
 /**
  * routing
  */
@@ -50,6 +50,21 @@ app.get('/chat', function(req, res){
 	res.redirect('/');
 });
 
+
+/**
+ * mongodbサーバーへ接続
+ */
+//mongoose
+var Schema = mongoose.Schema;
+var UserSchema = new Schema({
+  username: String,
+  message: String,
+//  date: Date
+  date: String
+});
+mongoose.model('User', UserSchema);
+mongoose.connect('mongodb://localhost/chat_app');
+var User = mongoose.model('User');
 
 /**
  * socket.io
@@ -63,36 +78,99 @@ socket.on('connection', function(client) {
 	// 変数設定
 	var uid = client.store.id;
 	var roomClients = client.manager.roomClients;
+
 	// クライアントが接続したときの処理
 	client.on('login', function(cookie){
-		cookie = cookieUtil.parse(cookie); // クッキーをオブジェクトにパース
-		sid = connect.utils.parseSignedCookie(cookie['connect.sid'], app.get('secretKey')); // 署名されたセッションIDをデコード
+		// クッキーをオブジェクトにパース
+		cookie = cookieUtil.parse(cookie);
+		// 署名されたセッションIDをデコード
+		sid = connect.utils.parseSignedCookie(cookie['connect.sid'], app.get('secretKey'));
+		// 初回接続でDBに保存されているメッセージを取得
+		User.find(function(err, docs){
+			client.emit('msgopen', docs);
+		});
 
 		store.get(sid, function(err, session){
 			if(session && "username" in session){
 				username = session.username // httpセッションからユーザ名を取得
 				client.emit('username', username);
 				roomClients[uid]['username'] = username;
-				client.emit('system', username + ' さんがログインしました');
-				client.broadcast.emit('system', username + ' さんがログインしました');
+				var msg = username + ' さんがログインしました';
+				client.emit('system', msg); // TODO: Bug. ログインメッセージが出ない
+				client.broadcast.emit('system', msg);
 				client.emit('loginusers',roomClients );
 				client.broadcast.emit('loginusers', roomClients);
+				//DBに登録
+				var user = new User();
+				user.username  = 'system';
+				user.message  = msg;
+				user.date = new Date();
+				user.save(function(err) {
+					if (err) { console.log(err); }
+				});
 			}
 		});
 	});
 	// クライアントがメッセージを送信した時の処理
 	client.on('message', function(event){
+		nowdate = new getDateAndTime();
 		console.log(event.username + ' says: ' + event.message);
 		client.emit('message', event);
 		client.broadcast.emit('message', event);
+		//DBに登録
+		var user = new User();
+		user.username  = event.username;
+		user.message  = event.message;
+		user.date = nowdate;
+		user.save(function(err) {
+			if (err) { console.log(err); }
+		});
+	});
+	// クライアントがログオール削除を実行した時
+	client.on('msg alldel', function(){
+		client.emit('db drop');
+		client.broadcast.emit('db drop');
+		User.find().remove();
 	});
 	// クライアントが切断したときの処理
 	client.on('disconnect', function(){
+		nowdate = new getDateAndTime();
 		console.log(roomClients[uid]['username'] + 'が切断しました。');
-		client.broadcast.emit('system', roomClients[uid]['username'] + ' さんがログアウトしました');
+		var msg = roomClients[uid]['username'] + ' さんがログアウトしました';
+		client.broadcast.emit('system', msg );
+		//DBに登録
+		var user = new User();
+		user.username  = roomClients[uid]['username'];
+		user.message  = msg;
+		user.date = nowdate;
+		user.save(function(err) {
+			if (err) { console.log(err); }
+		});
+		//ログインユーザーを更新
 		delete client.manager.roomClients[uid];
 		client.broadcast.emit('loginusers', roomClients);
 	});
 });
 
+
+/**
+ * function
+ */
+
+// UnixTimeを取得
+function getUnixTime() {
+   return parseInt((new Date)/1000);
+}
+
+// 現在の日時を YYYY/MM/DD hh:mm:dd 形式で返す関数
+function getDateAndTime() {
+  dd = new Date();
+  year = (dd.getYear() < 2000 ? dd.getYear()+1900 : dd.getYear() );
+  month = (dd.getMonth() < 9 ? "0" + (dd.getMonth()+1) : dd.getMonth()+1 );
+  day = (dd.getDate() < 10 ? "0" + dd.getDate() : dd.getDate() );
+  hour = (dd.getHours() < 10 ? "0" + dd.getHours() : dd.getHours() );
+  minute = (dd.getMinutes() < 10 ? "0" + dd.getMinutes() : dd.getMinutes() );
+  second = (dd.getSeconds() < 10 ? "0" + dd.getSeconds() : dd.getSeconds() );
+  return year + "/" + month + "/" + day + " " + hour + ":" + minute + ":" + second;
+}
 

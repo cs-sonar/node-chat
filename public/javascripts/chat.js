@@ -5,37 +5,72 @@ $(function(){
     socket.on("connect", function(){
         uid = socket.socket.transport.sessid;
         $("#transportName").text("connection ID " + socket.socket.transport.sessid); // 接続ID
-        $("#transportID").text("connect via " + socket.socket.transport.name); // 接続時に接続方式表示
+        $("#transportID").text("connect via " + socket.socket.transport.name); // 接続方式
         socket.emit("login", document.cookie);
     });
 
     socket.on("username", function(sessionUsername){
-        username = sessionUsername; // POSTしたユーザ名をhttpセッション+socket.io経由で取得
+	// POSTしたユーザ名をhttpセッション+socket.io経由で取得
+        username = sessionUsername;
         $("#username").text("connect username " + username);
     });
 
+    // ログイン中のユーザーを描写
     socket.on("loginusers", function(login){
         $("#loginusers li").remove();
 	for (var i in login){
 		if (i === uid) {
-		$("<li class=\"blue\">").text(login[i].username).prependTo($("#loginusers"));
+			$("<li class=\"blue\">").text(login[i].username).prependTo($("#loginusers"));
 		}else{
-		$("<li>").text(login[i].username).prependTo($("#loginusers"));
+			$("<li>").text(login[i].username).prependTo($("#loginusers"));
 		}
 	}
     });
-
+    // メッセージ受信
     socket.on("message", function(message){
-        $("<div class=\"text-message\" style=\"display: none;\"><tr>").html("<td width=\"250px\"><p class=\"text-success\">" + message.username + " says : </p></td><td width=\"800px\"><p>" + message.message + "</p></td>").prependTo($("#messageArea table tbody"));// 受信メッセージをレンダリング
-        $(".text-message").animate({height: 'show', opacity: 'show'}, 'normal');
+        $('div#messageArea dl')
+	.prepend(
+		$('<dt>' + message.username  + ' says : </dt><dd>' + message.message + '</dd>')
+		.fadeIn('slow')
+	);
     });
 
+    // システムメッセージ受信
     socket.on("system", function(message){
-        $("<div class=\"text-message\" style=\"display: none;\"><tr>").html("<td width=\"250px\"><p class=\"text-info\">system says : </p></td><td width=\"800px\"><p>" + message + "</p></td>").prependTo($("#messageArea table tbody"));// 受信メッセージをレンダリング
-        $(".text-message").animate({height: 'show', opacity: 'show'}, 'normal');
+        $('div#messageArea dl')
+	.prepend(
+		$('<dt>system says : </dt><dd>' + message + '</dd>')
+		.fadeIn('slow')
+	);
     });
 
+    // 入力メッセージをサーバへ
     $("#submitButton").click(function(){
-        socket.emit("message", {message: $("#msg").val(),username: username}); // 入力メッセージをサーバへ
+        socket.emit("message", {message: $("#msg").val(),username: username});
+     });
+
+    //DBにあるメッセージを削除した場合は表示を削除
+    socket.on('db drop', function(){
+        $('#messageArea dl').empty();
     });
+
+    // ログ削除ボタン
+    $("#logDelButton").click(function(){
+        socket.emit("msg alldel",'DB data all delete.');
+     });
+
+    // 初回接続でDBにあるデータを取得
+    socket.on('msgopen', function(msg){
+        if(msg.length == 0){ // 取得内容が空っぽだったら
+		return;
+        } else {
+            $('#messageArea dl').empty();
+            $.each(msg, function(key, value){
+                $('div#messageArea dl')
+		.prepend(
+			$('<dt>' + value.username + ' says :</dt><dd>' + value.message + '</dd>')
+		);
+            });   
+        }
+     });
 });
