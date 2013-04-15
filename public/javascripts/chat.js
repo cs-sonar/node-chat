@@ -22,10 +22,17 @@ $(function(){
         } else {
             $('#messageLogArea dl').empty();
             $.each(msg, function(key, value){
+		if(value.image){
+                $('div#messageLogArea dl')
+		.prepend(
+			$('<dt class="gray">' + value.username + ' says :</dt><dd class="gray"><img src="data:image/jpeg;base64,' + value.image + '" width="150px" height="75px">(' + value.date + ')</dd>')
+		);
+		}else{
                 $('div#messageLogArea dl')
 		.prepend(
 			$('<dt class="gray">' + value.username + ' says :</dt><dd class="gray">' + value.message + '(' + value.date + ')</dd>')
 		);
+		}
             });
         }
      });
@@ -53,6 +60,16 @@ $(function(){
 		.fadeIn('slow')
 	);
     });
+
+    // 画像受信
+    socket.on("image", function(message){
+        $('div#messageArea dl')
+	.prepend(
+		$('<dt class="blue">' + message.username + ' says :</dt><dd><img src="data:image/jpeg;base64,' + message.image + '" width="150px" height="75px">　<sapn class="gray">(' + message.date + ')</span></dd>')
+		.fadeIn('slow')
+	);
+    });
+
 
     // システムメッセージ受信
     socket.on("system", function(message){
@@ -96,6 +113,7 @@ $(function(){
         fileReader.onload = function(event) {
             data.file = event.target.result;
             data.name = "uploadFile";
+            data.username = username;
             socket.emit('upload',data);
         }
     });
