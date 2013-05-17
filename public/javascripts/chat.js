@@ -25,7 +25,7 @@ $(function(){
 		if(value.image){
                 $('div#messageLogArea dl')
 		.prepend(
-			$('<dt class="gray">' + value.username + ' says :</dt><dd class="gray"><img src="data:image/jpeg;base64,' + value.image + '" width="150px" height="75px">(' + value.date + ')</dd>')
+			$('<dt class="gray">' + value.username + ' says :</dt><dd class="gray"><img src="' + value.image + '" width="150px" height="75px">(' + value.date + ')</dd>')
 		);
 		}else{
                 $('div#messageLogArea dl')
@@ -65,7 +65,7 @@ $(function(){
     socket.on("image", function(message){
         $('div#messageArea dl')
 	.prepend(
-		$('<dt class="blue">' + message.username + ' says :</dt><dd><img src="data:image/jpeg;base64,' + message.image + '" width="150px" height="75px">　<sapn class="gray">(' + message.date + ')</span></dd>')
+		$('<dt class="blue">' + message.username + ' says :</dt><dd><img src="' + message.image + '" width="150px" height="75px">　<sapn class="gray">(' + message.date + ')</span></dd>')
 		.fadeIn('slow')
 	);
     });
@@ -109,7 +109,7 @@ $(function(){
         var fileReader = new FileReader();
         var send_file = file;
         var data = {};
-        fileReader.readAsBinaryString(send_file);
+        fileReader.readAsDataURL(send_file);
         fileReader.onload = function(event) {
             data.file = event.target.result;
             data.name = "uploadFile";
