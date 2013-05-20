@@ -28,6 +28,8 @@ $(function(){
 			$('<dt class="gray">' + value.username + ' says :</dt><dd class="gray"><img src="' + value.image + '" width="150px" height="75px">(' + value.date + ')</dd>')
 		);
 		}else{
+        	value.username = value.username.htmlEscape();
+       		value.message  = value.message.htmlEscape();
                 $('div#messageLogArea dl')
 		.prepend(
 			$('<dt class="gray">' + value.username + ' says :</dt><dd class="gray">' + value.message + '(' + value.date + ')</dd>')
@@ -54,6 +56,8 @@ $(function(){
     });
     // メッセージ受信
     socket.on("message", function(message){
+        message.username = message.username.htmlEscape();
+        message.message  = message.message.htmlEscape();
         $('div#messageArea dl')
 	.prepend(
 		$('<dt class="blue">' + message.username  + ' says : </dt><dd>' + message.message + '　<sapn class="gray">(' + message.date + ')</span></dd>')
@@ -136,4 +140,16 @@ $(function(){
     $("#logDelButton").click(function(){
         socket.emit("msg alldel",'DB data all delete.');
      });
+
+   // html escape
+   String.prototype.htmlEscape = function(){
+        var obj = document.createElement('pre');
+        if (typeof obj.textContent != 'undefined') {
+            obj.textContent = this;
+        } else {
+            obj.innerText = this;
+        }
+        return obj.innerHTML;
+   }
+
 });
