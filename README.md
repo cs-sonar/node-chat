@@ -15,10 +15,11 @@ linux(64bit)の場合
     tar zxvf mongodb-linux-x86_64-2.4.1.tgz
 
 起動
+とりあえず動かすだけなら --nojournal --smallfiles　をつけないと3GBほどのファイルが作られちゃいます
 
     mkdir -p /path/to/db
     cd mongodb-linux-x86_64-2.4.1
-    ./bin/mongod --dbpath /path/to/db/
+    ./bin/mongod --dbpath /path/to/db/ --nojournal --smallfiles
 
 
 Install
