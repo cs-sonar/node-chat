@@ -80,17 +80,7 @@ $(function(){
 	);
     });
 
-    // 入力メッセージをサーバへ
-    $("#submitButton").click(function(){
-	if($("#msg").val() == ""){
-		alert("ぬるぽ");
-	}else{
-        	socket.emit("message", {message: $("#msg").val(),username: username});
-		$("#msg").val("");
-	}
-     });
-
-    // エンターキーが押された場合も入力メッセージをサーバーへ
+    // エンターキーが押された場合,入力メッセージをサーバーへ
     $("body").keypress( function( event ) {
 	if( event.which === 13 ){
 		if($("#msg").val() == ""){
@@ -102,21 +92,40 @@ $(function(){
 	}
     });
 
+    // 画像アップロード領域を非表示
+    $('.accordion_head').click(function() {
+    $(this).next().slideToggle();
+    }).next().hide();
 
-    // 画像アップロード
-    $("#fileInput").change(function(event){ //アップロードボタンに変更があれば
-        var file = event.target.files[0];
-        var fileReader = new FileReader();
-        var send_file = file;
-        var data = {};
-        fileReader.readAsDataURL(send_file);
-        fileReader.onload = function(event) {
-            data.file = event.target.result;
-            data.name = "uploadFile";
-            data.username = username;
-            socket.emit('upload',data);
-        }
+    // 画像D&Dアップロード
+    $('#drop_zone').on({
+        'dragover': function(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            evt.originalEvent.dataTransfer.dropEffect = 'copy';
+         },
+         'drop': function(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            var files = evt.originalEvent.dataTransfer.files;
+            for (var i = 0, f; f = files[i]; i += 1) {
+                    if (!f.type.match('image.*')) {
+                        continue;
+                    }else{
+                        var reader = new FileReader();
+                        var data = {};
+                        reader.readAsDataURL(f);
+                        reader.onload = function(event) {
+                            data.file = event.target.result;
+                            data.name = "uploadFile";
+                            data.username = username;
+                            socket.emit('upload',data);
+                        };
+                    }
+             }
+         }
     });
+
 
     //DBにあるメッセージを削除した場合は表示を削除
     socket.on('db drop', function(){

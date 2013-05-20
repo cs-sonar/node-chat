@@ -36,3 +36,4 @@ dl.list dd {
 	border-bottom: 1px #CCCCCC solid;
 }
 
+.accordion_head {cursor:pointer;}
