@@ -16,7 +16,7 @@ linux(64bit)の場合
 
 起動
 
-    mkdir -p /data/db
+    mkdir -p /path/to/db
     cd mongodb-linux-x86_64-2.4.1
     ./bin/mongod --dbpath /path/to/db/
 
