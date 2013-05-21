@@ -1,21 +1,21 @@
 
 a {
-  color: #00B7FF;
+	color: #00B7FF;
 }
 
 .red {
-  color: red;
-  font:boid;
+	color: red;
+	font:boid;
 }
 
 .blue {
-  color: blue;
-  font: boid;
+	color: blue;
+	font: boid;
 }
 
 .gray {
-  color: #999;
-  font: boid;
+	color: #999;
+	font: boid;
 }
 
 dl.list {
@@ -36,4 +36,6 @@ dl.list dd {
 	border-bottom: 1px #CCCCCC solid;
 }
 
-.accordion_head {cursor:pointer;}
+.accordion_head {
+	cursor:pointer;
+}
